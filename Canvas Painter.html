@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>基于html canvas的画板</title>
+</head>
+
+<body>
+  <canvas id="myCanvas" width="800px" height="600px" style="border: 2px solid #d3d3d3;">
+  	您的浏览器不支持html标签.
+  </canvas>
+
+  <button id="clear"> 清空画板 </button>
+
+  <input type="button" id="eraser" value=" 使用橡皮擦 " onclick="clickEraser()"></input>
+
+  <select id="penColor" onchange="changePenColor(this.value)"> <!-- 改变画笔颜色 -->
+  	<option value="1" > 黑色 </option>
+  	<option value="2" selected="selected"> 红色 </option>
+  	<option value="3"> 绿色 </option>
+  	<option value="4"> 蓝色 </option>
+  	<option value="5"> 黄色 </option>
+  </select>
+
+  <select id="penWeight" onchange="changePenWeight(this.value)"> <!-- 改变画笔粗细 -->
+  	<option value="1"> 1px </option>
+  	<option value="2" selected="selected"> 2px </option>
+  	<option value="4"> 4px </option>
+  	<option value="8"> 8px </option>
+  	<option value="16"> 16px </option>
+  </select>
+
+  <button id="save"> 另存为 </button>
+
+  <script>
+
+  	var canvas = document.getElementById("myCanvas");
+  	var ctx = canvas.getContext('2d');
+
+  	var penWeight = getWeight("2"); // 画笔初始宽度为2px
+  	var penColor = getColor("2"); // 画笔初始颜色为红色
+  	var is_eraser = false; // 是否在用橡皮的状态
+  	var color = '#ff0000';  
+  	var weight = '2';  // 记录使用橡皮擦前的颜色、粗细 
+
+  	// 画线函数
+  	canvas.onmousedown = function(e) {
+  		//var startx = e.clientX - canvas.offsetLeft + document.body.scrollLeft;
+  		//var starty = e.clientY - canvas.offsetTop + document.body.scrollTop;
+  		var startx = e.offsetX;
+  		var starty = e.offsetY;
+
+  		ctx.beginPath();
+  		ctx.moveTo(startx, starty);
+
+  		ctx.lineCap = 'round';
+  		ctx.lineJoin = 'round';
+  		ctx.strokeStyle = penColor;
+  		ctx.lineWidth = penWeight;
+
+  		canvas.onmousemove = function(e) {
+  			//var movex = e.clientX - canvas.offsetLeft + document.body.scrollLeft;
+  			//var movey = e.clientY - canvas.offsetTop + document.body.scrollTop;
+  			var movex = e.offsetX;
+  			var movey = e.offsetY;
+  			ctx.lineTo(movex, movey);
+  			ctx.stroke();
+  		}
+
+  		canvas.onmouseup = function(e) {
+  			ctx.closePath();
+  			canvas.onmousemove = null;
+  			canvas.onmouseup = null;
+  		}
+  	}
+
+  	// 清空画布方法
+  	var btn_clear = document.getElementById("clear");
+  	btn_clear.onclick = function() {
+  		/*var tempWidth = canvas.width;
+  		canvas.width = canvas.height;
+  		canvas.width = tempWidth; */ // 原理不明的清空画布方法
+  		ctx.clearRect(0, 0, canvas.width, canvas.height);
+  	}
+
+  	// 橡皮擦函数 : 改变按钮上的字 并启用橡皮擦
+  	function clickEraser() {
+  		if (document.getElementById("eraser").value == " 使用橡皮擦 ") {
+  			document.getElementById("eraser").value = " 使用画笔 ";
+  			is_eraser = true;
+  			color = penColor;
+  			weight = penWeight;
+  			penWeight = 10;
+  			penColor = '#ffffff';
+  		} else if (document.getElementById("eraser").value == " 使用画笔 ") { // 不加else无限循环了233
+  			document.getElementById("eraser").value = " 使用橡皮擦 ";
+  			is_eraser = false;
+  			penColor = color;
+  			penWeight = weight;
+  		}
+  	}
+
+  	// 选择笔的颜色
+  	function changePenColor(value) {
+  		if (is_eraser == true) { 
+  			/*document.getElementById("eraser").value = " 使用橡皮擦 ";
+  			is_eraser = false;
+  			penWeight = weight; // 不加这句选完颜色后粗细维持橡皮擦粗细 */
+  			clickEraser();
+  		}
+  		//color = getColor(value);
+  		penColor = getColor(value);
+  	}
+
+  	function changePenWeight(value) {
+  		if (is_eraser == true) {
+  			/*document.getElementById("eraser").value = " 使用橡皮擦 ";
+  			is_eraser = false;
+  			penColor = color; */
+  			clickEraser();
+  		}
+		//weight = getWeight(value);
+  		penWeight = getWeight(value);
+  	}
+
+  	// 颜色选择器
+  	function getColor(value) {
+
+  		var Color;
+  		switch (value) {
+  			case "1":
+  				Color = '#000000';
+  				break;
+  			case "2":
+  				Color = '#ff0000';
+  				break;
+  			case "3":
+  				Color = '#008000';
+  				break;
+  			case "4":
+  				Color = '#0000ff';
+  				break;
+  			case "5":
+  				Color = '#FFFF00';
+  				break;
+  		}
+  		return Color;
+  	}
+
+  	// 粗细选择器
+  	function getWeight(value) {
+  		var Weight;
+  		switch (value) {
+  			case "1":
+  				Weight = 1;
+  				break;
+  			case "2":
+  				Weight = 2;
+  				break;
+  			case "4":
+  				Weight = 4;
+  				break;
+  			case "8":
+  				Weight = 8;
+  				break;
+  			case "16":
+  				Weight = 16;
+  				break;
+  		}
+  		return Weight;
+  	}
+
+  	/*保存图片事件 <!-- 参考于博客园的天马3798 http://www.cnblogs.com/tianma3798/p/6121894.html */
+  	var btn_save = document.getElementById('save');
+  	btn_save.onclick = function() {
+  		var type = 'png';
+  		download(type);
+  	}
+  	//图片下载操作,指定图片类型
+  	function download(type) {
+  		//设置保存图片的类型
+  		var imgdata = canvas.toDataURL(type);
+  		//将mime-type改为image/octet-stream,强制让浏览器下载
+  		imgdata = imgdata.replace('image/png', 'image/octet-stream')
+  		//将图片保存到本地
+  		var saveFile = function(data, filename) {
+  			var link = document.createElement('a');
+  			link.href = data;
+  			link.download = filename;
+  			var event = document.createEvent('MouseEvents');
+  			event.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+  			link.dispatchEvent(event);
+  		}
+  		var filename = new Date().toLocaleDateString() + '.' + type;
+  		saveFile(imgdata, filename);
+  	}
+
+  </script>
+
+</body>
+</html>
